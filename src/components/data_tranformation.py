@@ -1,10 +1,11 @@
 import sys
 import pandas as pd
-import numpy as np 
+import numpy as np
+from sklearn.compose import ColumnTransformer 
 
-from src.Exception import CustomException
+from src.exception import CustomException
 from sklearn.impute import SimpleImputer
-from sklearn.pipeline import pipeline
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder,StandardScaler
 import os
 from dataclasses import dataclass
@@ -29,7 +30,7 @@ class DataTrafromation:
 
             cut_categories=['Fair','Good','Very Good','Premium','Ideal']
             color_categories=['D','E','F','G','H','I','J']
-            clarity_categories=['I1','SI2','SI1','VS2','VS1','VVs2','VVS1','IF']
+            clarity_categories=['I1','SI2','SI1','VS2','VS1','VVS2','VVS1','IF']
 
             logging.info('Pipeline initiated')
 
@@ -51,10 +52,12 @@ class DataTrafromation:
                 ]
             )
 
-            preprocessor=ColumnTranformer([
+            preprocessor=ColumnTransformer([
                 ('num_pipeline',num_pipeline,numerical_cols),
                 ('cat_pipeline',cat_pipeline,categorical_cols)
             ])
+
+            return preprocessor
 
             logging.info('Pipeline completed')
 
@@ -88,16 +91,16 @@ class DataTrafromation:
             target_feature_test_df=test_df[target_coloumn_name]
 
             ##tranformating using preprocessor obj
-            input_feature_train_arr=preprocessing_obj.fit_tranform(input_feature_train_df)
-            input_feature_test_arr=preprocessing_obj.fit_tranform(input_feature_test_df)
+            input_feature_train_arr=preprocessing_obj.fit_transform(input_feature_train_df)
+            input_feature_test_arr=preprocessing_obj.transform(input_feature_test_df)
 
             logging.info('Applying preprocessing obj on traing and testing datasets')
 
-            train_arr=np.c_[input_feature_rain_arr, np.array(target_feature_train_df)]
+            train_arr=np.c_[input_feature_train_arr, np.array(target_feature_train_df)]
             test_arr=np.c_[input_feature_test_arr, np.array(target_feature_test_df)]
 
             save_object(
-                file_path=self.data_tranformation_config.preprocessing_obj_file_path,
+                file_path=self.data_tranformation_config.preprocessor_obj_file_path,
                 obj=preprocessing_obj
             )
 
@@ -106,7 +109,7 @@ class DataTrafromation:
             return(
                 train_arr,
                 test_arr,
-                self.data_tranformation_config.preprocessing_obj_file_path
+                self.data_tranformation_config.preprocessor_obj_file_path
             )
 
         except Exception as e:
